@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>flappy bird</title>
+	<style>
+		*{margin:0;padding:0;}
+		img{vertical-align: middle;}
+		.bg {
+			width: 800px;
+			height: 500px;
+			background-image: url(img/bg1.jpg);
+			margin: 100px auto;
+			border: 1px solid black;
+			position: relative;
+			overflow: hidden;
+		}
+		.bird {
+			width: 40px;
+			height: 28px;
+			position: absolute;
+			background: url(img/bird.png) center center;
+			top: 200px;
+			left: 100px;
+		}
+		.pipe {
+			width: 60px;
+			height: 450px;
+			position: absolute;
+			top: -300px;
+		}
+		.pipe1 {
+			left: 500px;			
+		}
+		.pipe2 {
+			left: 800px;			
+		}
+		.pipe3 {
+			left: 1100px;			
+		}
+		.pipe .pipe-up {
+			margin-bottom: 150px;
+		}
+		.gameover {
+			position: absolute;
+			width: 400px;
+			height: 200px;
+			padding-top: 100px;
+			left: 50%;
+			top: 50%;
+			margin-left: -200px;
+			margin-top: -150px;
+			font-size: 20px;
+			letter-spacing: 2px;
+			color: red;
+			text-align: center;
+			display: none;
+			border-radius: 4px;
+			background: rgba(0,0,0,.5);
+		}
+		#again {
+			width: 80px;
+			height: 30px;
+			line-height: 30px;
+			position: absolute;
+			bottom: 50px;
+			left: 50%;
+			margin-left: -40px;
+			border: none;
+			border-radius: 4px;
+		}
+		.bg>.score {
+			position: absolute;
+			right: 20px;
+			top: 20px;
+			width: 100px;
+			height: 20px;
+			text-align: center;
+		}
+		.score>span {
+			display: inline-block;
+			width: 50px;
+			height: 20px;
+			line-height: 20px;
+			/*border: 1px solid red;*/
+		}
+	</style>
+</head>
+<body>
+	<div id="background" class="bg" onclick="bird.jump();">
+		<!-- 傻鸟 -->
+		<div id="sbird" class="bird"></div>
+		<!-- 柱子 -->
+		<div class="pipe pipe1">
+			<img class="pipe-up" src="img/pipe.png" alt="这是上柱子">
+			<img src="img/pipe.png" alt="这是下柱子">
+		</div>
+		<div class="pipe pipe2">
+			<img class="pipe-up" src="img/pipe.png" alt="这是上柱子">
+			<img src="img/pipe.png" alt="这是下柱子">
+		</div>
+		<div class="pipe pipe3">
+			<img class="pipe-up" src="img/pipe.png" alt="这是上柱子">
+			<img src="img/pipe.png" alt="这是下柱子">
+		</div>
+		<div id="game_over" class="gameover">
+			<p class="score">得分：<span class="get_score"></span></p>
+			<h1>Game Over!</h1>
+			<button id="again">再来一次</button>
+		</div>
+		<!-- 得分 -->
+		<div class="score">
+			得分:<span class="get_score"></span>
+		</div>
+	</div>
+	<script>
+		var background = document.getElementById('background');
+		var sbird = document.getElementById('sbird');
+		// 背景移动
+		var bg = {
+			x:0,
+			y:0,
+			movex: -1,
+			movey: 0,
+			move:function(){
+				this.x += this.movex;
+			},
+			draw:function(){
+				background.style.backgroundPosition = this.x + 'px 0';
+			}
+		}
+		// 傻鸟移动
+		var bird = {
+			x:100,
+			y:300,
+			movex:0,
+			movey:2,
+			ax:0,
+			ay:1,
+			width:40,
+			height:28,
+			flystyle:'ceter',
+			ct:0,
+			fly:function(){
+				if(this.ct%30 == 0){
+					this.flystyle = 'top';
+				}else if(this.ct%20 == 0){
+					this.flystyle = 'center';
+				}else if(this.ct%10 == 0){
+					this.flystyle = 'bottom';
+				}
+				this.ct++;
+				if(this.ct ===1000){
+					this.ct = 0;
+				}
+			},
+			down:function(){
+				this.movey = this.movey + this.ay * 1.5;
+				this.y = this.y + this.movey * 1;
+			},
+			jump:function(){
+				this.movey = -10;
+			},
+			draw:function(){
+				sbird.style.backgroundPosition = this.flystyle + ' center';
+				sbird.style.top = this.y +'px';
+				if(this.y>=500 || this.y<=0){
+					gameOver();
+				}
+			}
+		}
+		var pipes = document.getElementsByClassName('pipe');
+		var guans = [];
+		// 柱子移动
+		for(var i=0;i<pipes.length;i++){
+			guans[i] = {
+				x:500+300*i,
+				y:-300 + Math.round((Math.random()*100)*(Math.random()>0.5?1:-1)),
+				movex:-2,
+				movey:0,
+				width:60,
+				height:450,
+				move:function(){
+					this.x += this.movex;		
+				},
+				draw:function(){
+					this.pipe.style.left = this.x + 'px';
+					this.pipe.style.top = this.y + 'px';
+				},
+				check:function(){
+					if(this.x<-60){
+						count++;
+						this.x = 800+60;
+						this.y = -300 + Math.round((Math.random()*100)*(Math.random()>0.5?1:-1));
+					}
+				}
+			}
+			guans[i].pipe = pipes[i];
+		}
+		var count = 0;
+		var timer = setInterval(function(){
+			bg.move();
+			bg.draw();
+			bird.fly();
+			bird.down();
+			bird.draw();
+			for(var i=0;i<guans.length;i++){
+				guans[i].move();
+				guans[i].draw();
+				guans[i].check();
+				if(isRect(bird.x,bird.y,bird.width,bird.height,guans[i].x,guans[i].y,guans[i].width,guans[i].height)||isRect(bird.x,bird.y,bird.width,bird.height,guans[i].x,guans[i].y+600,guans[i].width,guans[i].height)){
+					gameOver();
+				}
+
+			}
+			console.log(guans[0].y);
+			var get_score = document.getElementsByClassName('get_score');
+			for(var i=0;i<get_score.length;i++){				
+				get_score[i].innerHTML = count;
+			}
+		},30);
+
+			
+		// 碰撞
+		function isRect(x1,y1,w1,h1,x2,y2,w2,h2){		
+			/*if(x1<=x2 && x1+w1<=x2){
+				return false;
+			}else if(x1>=x2 && x1>=x2+w2){
+				return false;
+			}else if(y1<=y2 && y1+h1<=y2){
+				return false;
+			}else if(y1>=y2 && y1>=y2+h2){
+				return false;
+			}
+			return true;*/
+			if(x1+w1>x2 && x1<x2+w2 && y1+h1>y2 && y1<y2+h2){
+				return true;
+			}
+			return false;
+		}
+		// 游戏结束
+		function gameOver(){
+			var game_over = document.getElementById('game_over');
+			game_over.style.display = 'block';
+			clearInterval(timer);			
+		}
+		var again = document.getElementById('again');
+		again.onclick = function(){
+			document.location.reload();
+		}
+	</script>
+</body>
+</html>
